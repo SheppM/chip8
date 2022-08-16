@@ -1,0 +1,14 @@
+{
+
+  "compilerOptions": {
+    "lib": ["ESNext","DOM"],
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": false,
+    "outDir": "/public"
+  },
+  "files": [
+    "src/index.ts"
+  ]
+}

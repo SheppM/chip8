@@ -1,0 +1,8 @@
+Chip8 implementation in typescript
+
+Chip8 remains to be one of the best introduction
+projects for programmers interested in emulation
+
+Though chip8 is simple in nature, it provides a lot
+of depth to programmers building the system and
+programs that can be interpreted by it
