@@ -156,9 +156,108 @@ export class Chip8 {
        program counter is increased by 2. */
     if (this.registers[x] != this.registers[y]) this.pc += 2;
   }
+
   LD_I_ADDR(nnn: number) {
     /* Set I = nnn. The value of register I is set to nnn. */
     this.I = nnn;
+  }
+
+  JP_V0_ADDR(nnn: number) {
+    /* Jump to location nnn + V0. 
+       The program counter is set to nnn plus the value of V0. */
+    this.pc = nnn + this.registers[0];
+  }
+
+  RND_VX_BYTE(x: number, kk: number) {
+    /* Set Vx = random byte AND kk.
+       The interpreter generates a random number from 0 to 255, which is then
+       ANDed with the value kk. The results are stored in Vx.
+       See instruction 8xy2 for more information on AND. */
+    const rand = Math.floor(Math.random() * 0x100);
+    this.registers[x] = rand & kk;
+  }
+
+  DRW_VX_VY_NIBBLE(x: number, y: number, nibble: number) {
+    /* Display n-byte sprite starting at memory location I at (Vx, Vy),
+       set VF = collision. 
+       The interpreter reads n bytes from memory, starting at the address
+       stored in I. These bytes are then displayed as sprites on screen
+       at coordinates (Vx, Vy). Sprites are XOR’d onto the existing screen.
+       If this causes any pixels to be erased, VF is set to 1, otherwise it is 
+       set to 0. If the sprite is positioned so part of it is outside 
+       the coordinates of the display,
+       it wraps around to the opposite side of the screen. */
+  }
+
+  SKP_VX(x: number) {
+    /* Skip next instruction if key with the value of Vx is pressed.
+       Checks the keyboard, and if the key corresponding to the value of Vx is
+       currently in the down position, PC is increased by 2. */
+  }
+
+  SKNP_VX(x: number) {}
+
+  LD_VX_DT(x: number) {
+    /* Set Vx = delay timer value. The value of DT is placed into Vx. */
+    this.registers[x] = this.delay;
+  }
+
+  LD_VX_K(x: number) {}
+
+  LD_DT_VX(x: number) {
+    /* Set delay timer = Vx. Delay Timer is set equal to the value of Vx */
+    this.delay = this.registers[x];
+  }
+
+  LD_ST_VX(x: number) {
+    /* Set sound timer = Vx. Sound Timer is set equal to the value of Vx. */
+    this.sound = this.registers[x];
+  }
+
+  ADD_I_VX(x: number) {
+    /* Set I = I + Vx. The values of I and Vx are added,
+       and the results are stored in I. */
+    this.I += this.registers[x];
+  }
+
+  LD_F_VX(x: number) {
+    /* Set I = location of sprite for digit Vx.
+       The value of I is set to the location for the hexadecimal sprite
+       corresponding to the value of Vx. See section 2.4,
+       Display, for more information on the Chip-8 hexadecimal
+       font. To obtain this value,
+       multiply VX by 5 (all font data stored in first 80 bytes of memory). */
+    this.I = this.registers[x * 5];
+  }
+
+  LD_B_VX(x: number) {
+    /* Store BCD representation of Vx in memory locations I, I+1, and I+2.
+       The interpreter takes the decimal value of Vx,
+       and places the hundreds digit in memory at location in I,
+       the tens digit at location I+1, and the ones digit at location I+2. */
+    let value: number = this.registers[x];
+    this.memory[this.I] = Math.floor(value / 100) % 10;
+    this.memory[this.I + 1] = Math.floor(value / 10) % 10;
+    this.memory[this.I + 2] = Math.floor(value / 1) % 10;
+  }
+
+  LD_I_VX(x: number) {
+    /* Stores V0 to VX in memory starting at address I.
+       I is then set to I + x + 1. */
+    for (let i = 0; i <= x; i++) {
+      this.memory[this.I + i] = this.registers[i];
+    }
+    this.I += x + 1;
+  }
+
+  LD_VX_I(x: number) {
+    /* Fills V0 to VX with values from memory starting at address I.
+       I is then set to I + x + 1 */
+
+    for (let i = 0; i <= x; i++) {
+      this.registers[i] = this.memory[this.I + i];
+    }
+    this.I += x + 1;
   }
 
   executeInstruction(opcode: number) {}
