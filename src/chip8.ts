@@ -6,14 +6,21 @@ export class Chip8 {
   I: number = 0;
   delay: number = 0;
   sound: number = 0;
+  keyboard: any;
+  monitor: any;
+
+  constructor(keyboard: any, monitor: any) {
+    this.keyboard = keyboard;
+    this.monitor = monitor;
+  }
 
   cycle() {
-    let opcode: number = (this.memory[this.pc] << 8) | this.memory[this.pc + 1];
-    return opcode;
+    const opcode: number = (this.memory[this.pc] << 8) | this.memory[this.pc + 1];
+    this.executeInstruction(opcode);
   }
 
   CLS() {
-    /* Clear the display. */
+    this.monitor.clear();
   }
 
   RET() {
@@ -193,9 +200,12 @@ export class Chip8 {
     /* Skip next instruction if key with the value of Vx is pressed.
        Checks the keyboard, and if the key corresponding to the value of Vx is
        currently in the down position, PC is increased by 2. */
+    if (this.keyboard.state[x] == true) this.pc += 2;
   }
 
-  SKNP_VX(x: number) {}
+  SKNP_VX(x: number) {
+    if (this.keyboard.state[x] == false) this.pc += 2;
+  }
 
   LD_VX_DT(x: number) {
     /* Set Vx = delay timer value. The value of DT is placed into Vx. */
@@ -260,5 +270,134 @@ export class Chip8 {
     this.I += x + 1;
   }
 
-  executeInstruction(opcode: number) {}
+  executeInstruction(opcode: number) {
+    this.pc += 2;
+
+    const x: number = (opcode & 0xf00) >> 8;
+    const y: number = (opcode & 0x00f0) >> 4;
+    const kk: number = opcode & 0x00ff;
+    const nnn: number = opcode & 0x0fff;
+    const n: number = opcode & 0xf;
+
+    switch (opcode & 0xf000) {
+      case 0x0000:
+        switch (opcode) {
+          case 0x00e0:
+            this.CLS();
+            break;
+          case 0x00ee:
+            this.RET();
+            break;
+        }
+        break;
+      case 0x1000:
+        this.JP_ADDR(nnn);
+        break;
+      case 0x2000:
+        this.CALL_ADDR(nnn);
+        break;
+      case 0x3000:
+        this.SE_VX_BYTE(x, kk);
+        break;
+      case 0x4000:
+        this.SNE_VX_BYTE(x, kk);
+        break;
+      case 0x5000:
+        this.SE_VX_VY(x, y);
+        break;
+      case 0x6000:
+        this.LD_VX_BYTE(x, kk);
+        break;
+      case 0x7000:
+        this.ADD_VX_BYTE(x, kk);
+        break;
+      case 0x8000:
+        switch (opcode & 0xf) {
+          case 0x0:
+            this.LD_VX_VY(x, y);
+            break;
+          case 0x1:
+            this.OR_VX_VY(x, y);
+            break;
+          case 0x2:
+            this.AND_VX_VY(x, y);
+            break;
+          case 0x3:
+            this.XOR_VX_VY(x, y);
+            break;
+          case 0x4:
+            this.ADD_VX_VY(x, y);
+            break;
+          case 0x5:
+            this.SUB_VX_VY(x, y);
+            break;
+          case 0x6:
+            this.SHR_VX_VY(x, y);
+            break;
+          case 0x7:
+            this.SUBN_VX_VY(x, y);
+            break;
+          case 0xe:
+            this.SHL_VX_VY(x, y);
+            break;
+        }
+        break;
+      case 0x9000:
+        this.SNE_VX_VY(x, y);
+        break;
+      case 0xa000:
+        this.LD_I_ADDR(nnn);
+        break;
+      case 0xb000:
+        this.JP_V0_ADDR(nnn);
+        break;
+      case 0xc000:
+        this.RND_VX_BYTE(x, kk);
+        break;
+      case 0xd000:
+        this.DRW_VX_VY_NIBBLE(x, y, n);
+        break;
+      case 0xe000:
+        switch (opcode & 0xff) {
+          case 0x9e:
+            this.SKP_VX(x);
+            break;
+          case 0xa1:
+            this.SKNP_VX(x);
+            break;
+        }
+        break;
+      case 0xf000:
+        switch (opcode & 0xff) {
+          case 0x07:
+            this.LD_VX_DT(x);
+            break;
+          case 0x0a:
+            this.LD_VX_K(x);
+            break;
+          case 0x15:
+            this.LD_DT_VX(x);
+            break;
+          case 0x18:
+            this.LD_ST_VX(x);
+            break;
+          case 0x1e:
+            this.ADD_I_VX(x);
+            break;
+          case 0x29:
+            this.LD_F_VX(x);
+            break;
+          case 0x33:
+            this.LD_B_VX(x);
+            break;
+          case 0x55:
+            this.LD_I_VX(x);
+            break;
+          case 0x65:
+            this.LD_VX_I(x);
+            break;
+        }
+        break;
+    }
+  }
 }
