@@ -8,7 +8,9 @@ let chip8 = new Chip8(keyboard, monitor);
 
 const loop = () => {
   chip8.cycle();
-  requestAnimationFrame(loop);
+  setTimeout(function () {
+    requestAnimationFrame(loop);
+  }, 1000);
 };
 
 loop();
