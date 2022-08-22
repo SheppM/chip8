@@ -1,3 +1,5 @@
+import { font, rom } from './consts';
+
 export class Chip8 {
   memory: number[] = new Array(4096);
   registers: number[] = new Array(16);
@@ -10,8 +12,22 @@ export class Chip8 {
   monitor: any;
 
   constructor(keyboard: any, monitor: any) {
+    // Loading font into memory
+
+    console.log(this.registers[0]);
+
+    for (let i = 0; i < font.length; i++) {
+      this.memory[i] = font[i];
+    }
+
+    for (let i = 0; i < rom.length; i++) {
+      this.memory[0x200 + i] = rom[i];
+    }
+
     this.keyboard = keyboard;
     this.monitor = monitor;
+
+    this.monitor.clear();
   }
 
   cycle() {
@@ -194,6 +210,17 @@ export class Chip8 {
        set to 0. If the sprite is positioned so part of it is outside 
        the coordinates of the display,
        it wraps around to the opposite side of the screen. */
+    
+    this.I = 0;
+    this.registers[0xf] = 0;
+    for (let i = 0; i < nibble; i++) {
+      let pixel = this.memory[this.I + i];
+      for (let j = 0; j < 8; j++) {
+        if ((pixel & 0x80) > 0 && this.monitor.setPixel(x + j, y + i)) this.registers[0xf] = 1;
+        pixel <<= 1;
+      }
+    }
+    this.monitor.draw();
   }
 
   SKP_VX(x: number) {
